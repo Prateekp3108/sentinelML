@@ -1,0 +1,11 @@
+torch
+torchvision
+streamlit
+adversarial-robustness-toolbox[pytorch]
+numpy
+scikit-learn
+matplotlib
+scipy
+reportlab
+Pillow
+umap-learn
