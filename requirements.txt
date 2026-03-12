@@ -1,7 +1,6 @@
-torch
-torchvision
 streamlit
-adversarial-robustness-toolbox[pytorch]
+torch==2.6.0
+torchvision==0.21.0
 numpy
 scikit-learn
 matplotlib
@@ -9,3 +8,4 @@ scipy
 reportlab
 Pillow
 umap-learn
+adversarial-robustness-toolbox[pytorch]
