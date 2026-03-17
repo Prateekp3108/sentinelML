@@ -1,6 +1,6 @@
 import streamlit as st
+import time
 from modules.model_loader import load_model, format_param_count
-
 st.set_page_config(
     page_title="SentinelML — Audit",
     page_icon="🛡️",
@@ -330,6 +330,59 @@ div[data-testid="stFileUploadDropzone"] {
     border: 1px solid #f5c6c2;
     margin-top: 0.75rem;
 }
+
+/* ── TROJAN RESULTS ── */
+.trojan-box {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.07);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.trojan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.trojan-verdict {
+    font-family: 'Geist', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.trojan-verdict-sub {
+    font-family: 'Geist', sans-serif;
+    font-size: 0.78rem;
+    color: #aaa !important;
+    margin-top: 0.2rem;
+}
+
+.trojan-stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.trojan-stat-row:last-child { border-bottom: none; }
+
+.trojan-stat-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem;
+    color: #888 !important;
+}
+
+.trojan-stat-value {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem;
+    color: #0a0a0a !important;
+    font-weight: 500;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -338,8 +391,10 @@ if "model_result" not in st.session_state:
     st.session_state.model_result = None
 if "attack_results" not in st.session_state:
     st.session_state.attack_results = None
+if "trojan_results" not in st.session_state:
+    st.session_state.trojan_results = None
 
-# ── NAVBAR (once only) ────────────────────────────────────────────────────
+# ── NAVBAR ────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="navbar">
     <div style="display:flex;align-items:center;gap:2.5rem">
@@ -353,7 +408,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# navbar height spacer
 st.markdown("<div style='height:56px'></div>", unsafe_allow_html=True)
 
 # ── SINGLE CENTERED COLUMN ────────────────────────────────────────────────
@@ -392,30 +446,26 @@ with main:
         )
 
     if uploaded_file is not None and st.session_state.model_result is None:
-        
-        # ── LOADING UI ────────────────────────────────────────────────────
+
         progress_container = st.empty()
-        
+
         stages = [
             (0.15, "Reading file..."),
             (0.35, "Deserializing model..."),
             (0.55, "Detecting architecture..."),
             (0.75, "Counting parameters..."),
             (0.90, "Probing input size..."),
-            (1.00, "Done"),
         ]
-        
+
         def render_progress(pct, label):
             bar_filled = int(pct * 28)
-            bar_empty = 28 - bar_filled
-            bar = "█" * bar_filled + "░" * bar_empty
-            percent = int(pct * 100)
+            bar_empty  = 28 - bar_filled
+            bar        = "█" * bar_filled + "░" * bar_empty
+            percent    = int(pct * 100)
             progress_container.markdown(f"""
             <div style="padding:1.5rem 0 0.5rem">
                 <div style="font-family:'Geist Mono',monospace;font-size:0.7rem;
-                color:#aaa;letter-spacing:1px;margin-bottom:0.6rem">
-                    ANALYZING MODEL
-                </div>
+                color:#aaa;letter-spacing:1px;margin-bottom:0.6rem">ANALYZING MODEL</div>
                 <div style="font-family:'Geist Mono',monospace;font-size:0.75rem;
                 color:#0a0a0a;letter-spacing:0.5px;margin-bottom:0.5rem">
                     {bar}
@@ -428,25 +478,23 @@ with main:
 
         import time
 
-        # Animate through stages while load_model runs
-        # Show first 5 stages as visual feedback, then do the real load
-        for pct, label in stages[:-1]:
+        for pct, label in stages:
             render_progress(pct, label)
             time.sleep(0.3)
 
-        # Do the actual load
         render_progress(0.95, "Finalizing...")
-        st.session_state.model_result = load_model(uploaded_file)
+        st.session_state.model_result   = load_model(uploaded_file)
         st.session_state.attack_results = None
+        st.session_state.trojan_results = None
 
-        # Flash done
         render_progress(1.0, "Done")
         time.sleep(0.4)
         progress_container.empty()
 
     if uploaded_file is None:
-        st.session_state.model_result = None
+        st.session_state.model_result   = None
         st.session_state.attack_results = None
+        st.session_state.trojan_results = None
 
     # ── STEPS 2+ ──────────────────────────────────────────────────────────
     if st.session_state.model_result is not None:
@@ -480,18 +528,14 @@ with main:
             </div>
             """, unsafe_allow_html=True)
 
-            # ── LAYER LIST (built separately to avoid f-string issues) ────
+            # ── LAYER LIST ────────────────────────────────────────────────
             layer_rows_html = ""
             for i, name in enumerate(result["layer_names"]):
-                layer_rows_html += (
-                    f'<div class="layer-row">{i+1:02d}. {name}</div>'
-                )
+                layer_rows_html += f'<div class="layer-row">{i+1:02d}. {name}</div>'
 
             st.markdown(f"""
             <div style="margin-top:1.25rem">
-                <div class="step-label" style="margin-bottom:0.6rem">
-                    Layer Architecture
-                </div>
+                <div class="step-label" style="margin-bottom:0.6rem">Layer Architecture</div>
                 <div class="layer-list">{layer_rows_html}</div>
             </div>
             """, unsafe_allow_html=True)
@@ -506,26 +550,26 @@ with main:
 
             b1, b2 = st.columns(2)
             with b1:
-                run_adv = st.button("⚔️  Adversarial Test")
+                run_adv  = st.button("⚔️  Adversarial Test")
             with b2:
                 run_troj = st.button("🔍  Trojan Detection")
 
+            # ── ADVERSARIAL ───────────────────────────────────────────────
             if run_adv:
                 if result["input_size"] and result["num_classes"]:
-                    
+
                     atk_container = st.empty()
 
                     def render_attack_progress(pct, label):
                         bar_filled = int(pct * 28)
-                        bar_empty = 28 - bar_filled
-                        bar = "█" * bar_filled + "░" * bar_empty
-                        percent = int(pct * 100)
+                        bar_empty  = 28 - bar_filled
+                        bar        = "█" * bar_filled + "░" * bar_empty
+                        percent    = int(pct * 100)
                         atk_container.markdown(f"""
                         <div style="padding:1rem 0 0.5rem">
                             <div style="font-family:'Geist Mono',monospace;font-size:0.7rem;
                             color:#aaa;letter-spacing:1px;margin-bottom:0.6rem">
-                                RUNNING SECURITY TESTS
-                            </div>
+                                RUNNING SECURITY TESTS</div>
                             <div style="font-family:'Geist Mono',monospace;font-size:0.75rem;
                             color:#0a0a0a;letter-spacing:0.5px;margin-bottom:0.5rem">
                                 {bar}
@@ -538,7 +582,6 @@ with main:
 
                     from modules.adversarial import run_adversarial_tests
 
-                    # Each attack updates the bar via the status_callback
                     attack_stages = {
                         "Preparing test image...":    0.10,
                         "Running FGSM attack...":     0.20,
@@ -553,7 +596,7 @@ with main:
                         "Scoring results...":         0.95,
                     }
 
-                    def update_status(msg):
+                    def update_adv_status(msg):
                         pct = attack_stages.get(msg, 0.5)
                         render_attack_progress(pct, msg)
 
@@ -563,23 +606,80 @@ with main:
                         model=result["model"],
                         input_size=result["input_size"],
                         num_classes=result["num_classes"],
-                        status_callback=update_status
+                        status_callback=update_adv_status
                     )
 
                     render_attack_progress(1.0, "All tests complete")
-                    import time
                     time.sleep(0.5)
                     atk_container.empty()
 
+            # ── TROJAN DETECTION ──────────────────────────────────────────
             if run_troj:
-                st.markdown(
-                    '<div class="status-line">↳ Coming soon...</div>',
-                    unsafe_allow_html=True)
+                if result["input_size"] and result["num_classes"]:
 
-            # ── RESULTS ───────────────────────────────────────────────────
+                    troj_container = st.empty()
+
+                    def render_trojan_progress(pct, label):
+                        bar_filled = int(pct * 28)
+                        bar_empty  = 28 - bar_filled
+                        bar        = "█" * bar_filled + "░" * bar_empty
+                        percent    = int(pct * 100)
+                        troj_container.markdown(f"""
+                        <div style="padding:1rem 0 0.5rem">
+                            <div style="font-family:'Geist Mono',monospace;font-size:0.7rem;
+                            color:#aaa;letter-spacing:1px;margin-bottom:0.6rem">
+                                SCANNING FOR TROJANS</div>
+                            <div style="font-family:'Geist Mono',monospace;font-size:0.75rem;
+                            color:#0a0a0a;letter-spacing:0.5px;margin-bottom:0.5rem">
+                                {bar}
+                                <span style="color:#bbb;margin-left:0.75rem">{percent}%</span>
+                            </div>
+                            <div style="font-family:'Geist Mono',monospace;font-size:0.7rem;
+                            color:#bbb">↳ {label}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    from modules.trojan_detector import run_trojan_detection
+
+                    classes_to_scan = min(result["num_classes"], 10)
+
+                    trojan_stages = {
+                        f"Scanning {classes_to_scan} classes for backdoor triggers...": 0.05,
+                        f"Analysing class 1 of {classes_to_scan}...":  0.10,
+                        f"Analysing class 2 of {classes_to_scan}...":  0.20,
+                        f"Analysing class 3 of {classes_to_scan}...":  0.30,
+                        f"Analysing class 4 of {classes_to_scan}...":  0.38,
+                        f"Analysing class 5 of {classes_to_scan}...":  0.46,
+                        f"Analysing class 6 of {classes_to_scan}...":  0.54,
+                        f"Analysing class 7 of {classes_to_scan}...":  0.62,
+                        f"Analysing class 8 of {classes_to_scan}...":  0.70,
+                        f"Analysing class 9 of {classes_to_scan}...":  0.78,
+                        f"Analysing class 10 of {classes_to_scan}...": 0.86,
+                        "Computing anomaly index...":                   0.93,
+                        "Trojan scan complete":                         1.00,
+                    }
+
+                    def update_trojan_status(msg):
+                        pct = trojan_stages.get(msg, 0.5)
+                        render_trojan_progress(pct, msg)
+
+                    render_trojan_progress(0.02, "Initializing Neural Cleanse...")
+
+                    st.session_state.trojan_results = run_trojan_detection(
+                        model=result["model"],
+                        input_size=result["input_size"],
+                        num_classes=result["num_classes"],
+                        status_callback=update_trojan_status
+                    )
+
+                    render_trojan_progress(1.0, "Scan complete")
+                    time.sleep(0.5)
+                    troj_container.empty()
+
+            # ── ADVERSARIAL RESULTS ───────────────────────────────────────
             if st.session_state.attack_results is not None:
-                ar = st.session_state.attack_results
-                score = ar["robustness_score"]
+                ar          = st.session_state.attack_results
+                score       = ar["robustness_score"]
                 score_color = (
                     "#276749" if score >= 70
                     else "#b7791f" if score >= 40
@@ -598,8 +698,8 @@ with main:
                     if "error" in r:
                         badge = '<span class="badge badge-warn">⚠ Error</span>'
                     elif r["success"]:
-                        conf = (f"{r.get('original_conf','?')}% → "
-                                f"{r.get('adversarial_conf','?')}%")
+                        conf  = (f"{r.get('original_conf','?')}% → "
+                                 f"{r.get('adversarial_conf','?')}%")
                         badge = (f'<span class="badge badge-fail">'
                                  f'✗ Fooled &nbsp;{conf}</span>')
                     else:
@@ -607,16 +707,15 @@ with main:
 
                     rows_html += (
                         f'<div class="attack-row">'
-                        f'<div>'
-                        f'<div class="attack-name">{atk_name}</div>'
-                        f'<div class="attack-detail">{detail}</div>'
-                        f'</div>{badge}</div>'
+                        f'<div><div class="attack-name">{atk_name}</div>'
+                        f'<div class="attack-detail">{detail}</div></div>'
+                        f'{badge}</div>'
                     )
 
                 st.markdown(f"""
                 <div class="step-divider"></div>
-                <div class="step-label">Results</div>
-                <div class="step-title">Security report</div>
+                <div class="step-label">Adversarial Results</div>
+                <div class="step-title">Attack test report</div>
                 <div class="score-block">
                     <div class="score-num" style="color:{score_color}">{score}</div>
                     <div class="score-sub">out of 100</div>
@@ -624,6 +723,106 @@ with main:
                 </div>
                 <div class="results-box">{rows_html}</div>
                 """, unsafe_allow_html=True)
+
+            # ── TROJAN RESULTS ────────────────────────────────────────────
+            if st.session_state.trojan_results is not None:
+                tr = st.session_state.trojan_results
+
+                if tr.get("error"):
+                    st.markdown(
+                        f'<div class="error-box">✗ Trojan scan error: {tr["error"]}</div>',
+                        unsafe_allow_html=True)
+                else:
+                    detected      = tr["trojan_detected"]
+                    verdict_color = "#c0392b" if detected else "#276749"
+                    verdict_text  = "⚠ Trojan Detected" if detected else "✓ No Trojan Found"
+                    verdict_sub   = (
+                        f"Confidence: {tr['confidence']} — "
+                        f"Suspected target class: {tr['suspected_target_class']}"
+                        if detected else
+                        "No suspicious backdoor triggers found across scanned classes"
+                    )
+
+                    # Norm bars
+                    norms     = tr["trigger_norms"]
+                    max_norm  = max(norms) if norms else 1
+                    norm_rows = ""
+                    for i, n in enumerate(norms):
+                        bar_pct    = int((n / max_norm) * 100)
+                        is_suspect = (detected and i == tr["suspected_target_class"])
+                        bar_color  = "#c0392b" if is_suspect else "#0a0a0a"
+                        norm_rows += (
+                            f'<div class="trojan-stat-row">'
+                            f'<div class="trojan-stat-label">'
+                            f'{"⚠ " if is_suspect else ""}Class {i:02d}</div>'
+                            f'<div style="flex:1;margin:0 1rem;height:4px;'
+                            f'background:rgba(0,0,0,0.06);border-radius:2px">'
+                            f'<div style="width:{bar_pct}%;height:100%;'
+                            f'background:{bar_color};border-radius:2px"></div></div>'
+                            f'<div class="trojan-stat-value">{n:.4f}</div>'
+                            f'</div>'
+                        )
+
+                    st.markdown(f"""
+                    <div class="step-divider"></div>
+                    <div class="step-label">Trojan Results</div>
+                    <div class="step-title">Backdoor scan report</div>
+                    <div class="trojan-box">
+                        <div class="trojan-header">
+                            <div>
+                                <div class="trojan-verdict"
+                                style="color:{verdict_color} !important">
+                                {verdict_text}</div>
+                                <div class="trojan-verdict-sub">{verdict_sub}</div>
+                            </div>
+                            <span class="badge {'badge-fail' if detected else 'badge-pass'}">
+                                Anomaly Index: {tr['anomaly_index']}
+                            </span>
+                        </div>
+                        <div class="trojan-stat-row">
+                            <div class="trojan-stat-label">Classes scanned</div>
+                            <div class="trojan-stat-value">{tr['classes_scanned']}</div>
+                        </div>
+                        <div class="trojan-stat-row">
+                            <div class="trojan-stat-label">Detection method</div>
+                            <div class="trojan-stat-value">Neural Cleanse (MAD scoring)</div>
+                        </div>
+                        <div class="trojan-stat-row">
+                            <div class="trojan-stat-label">Anomaly threshold</div>
+                            <div class="trojan-stat-value">2.0</div>
+                        </div>
+                        <div style="padding:0.8rem 1.5rem 0.2rem">
+                            <div class="step-label" style="margin-bottom:0.5rem">
+                                Trigger norm per class — smaller = more suspicious
+                            </div>
+                            {norm_rows}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+        # ── DOWNLOAD REPORT ───────────────────────────────────────────
+            if st.session_state.attack_results is not None or st.session_state.trojan_results is not None:
+                st.markdown("""
+                <div class="step-divider"></div>
+                <div class="step-label">Export</div>
+                <div class="step-title">Download report</div>
+                <div class="step-desc">Full audit results as a PDF</div>
+                """, unsafe_allow_html=True)
+
+                from modules.report_generator import generate_report
+
+                pdf_bytes = generate_report(
+                    model_result=result,
+                    attack_results=st.session_state.attack_results,
+                    trojan_results=st.session_state.trojan_results
+                )
+
+                st.download_button(
+                    label="⬇  Download PDF Report",
+                    data=pdf_bytes,
+                    file_name="sentinelml_audit_report.pdf",
+                    mime="application/pdf"
+                )
 
         else:
             st.markdown(
