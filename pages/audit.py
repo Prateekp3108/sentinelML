@@ -393,6 +393,10 @@ if "attack_results" not in st.session_state:
     st.session_state.attack_results = None
 if "trojan_results" not in st.session_state:
     st.session_state.trojan_results = None
+if "ai_response" not in st.session_state:
+    st.session_state.ai_response = None
+if "ai_tier" not in st.session_state:
+    st.session_state.ai_tier = None
 
 # ── NAVBAR ────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -486,6 +490,8 @@ with main:
         st.session_state.model_result   = load_model(uploaded_file)
         st.session_state.attack_results = None
         st.session_state.trojan_results = None
+        st.session_state.ai_response = None
+        st.session_state.ai_tier     = None
 
         render_progress(1.0, "Done")
         time.sleep(0.4)
@@ -495,6 +501,8 @@ with main:
         st.session_state.model_result   = None
         st.session_state.attack_results = None
         st.session_state.trojan_results = None
+        st.session_state.ai_response = None
+        st.session_state.ai_tier     = None
 
     # ── STEPS 2+ ──────────────────────────────────────────────────────────
     if st.session_state.model_result is not None:
@@ -823,6 +831,138 @@ with main:
                     file_name="sentinelml_audit_report.pdf",
                     mime="application/pdf"
                 )
+
+            # ── STEP 04: AI ANALYSIS ──────────────────────────────────────
+            if st.session_state.attack_results is not None or st.session_state.trojan_results is not None:
+                st.markdown("""
+                <div class="step-divider"></div>
+                <div class="step-label">Step 04</div>
+                <div class="step-title">AI Security Analysis</div>
+                <div class="step-desc">Upload your model source code for
+                personalised recommendations</div>
+                """, unsafe_allow_html=True)
+
+                tier = st.selectbox(
+                    "Your experience level",
+                    options=["student", "engineer", "redteam"],
+                    format_func=lambda x: {
+                        "student":  "🟢 Student / Researcher — plain English explanations",
+                        "engineer": "🔵 ML Engineer — technical fixes and code snippets",
+                        "redteam":  "🔴 Red Team Analyst — full rewritten code + threat model"
+                    }[x],
+                    label_visibility="collapsed"
+                )
+
+                source_file = st.file_uploader(
+                    "Upload model source code (.py) — optional",
+                    type=["py"],
+                    label_visibility="visible",
+                    key="source_uploader"
+                )
+
+                if st.button("✨  Generate AI Analysis"):
+                    from modules.ai_advisor import (
+                        build_audit_summary, call_gemini, call_gemini_no_code
+                    )
+
+                    ai_container = st.empty()
+
+                    def render_ai_progress(pct, label):
+                        bar_filled = int(pct * 28)
+                        bar_empty  = 28 - bar_filled
+                        bar        = "█" * bar_filled + "░" * bar_empty
+                        percent    = int(pct * 100)
+                        ai_container.markdown(f"""
+                        <div style="padding:1rem 0 0.5rem">
+                            <div style="font-family:'Geist Mono',monospace;
+                            font-size:0.7rem;color:#aaa;letter-spacing:1px;
+                            margin-bottom:0.6rem">RUNNING AI ANALYSIS</div>
+                            <div style="font-family:'Geist Mono',monospace;
+                            font-size:0.75rem;color:#0a0a0a;letter-spacing:0.5px;
+                            margin-bottom:0.5rem">
+                                {bar}
+                                <span style="color:#bbb;margin-left:0.75rem">
+                                {percent}%</span>
+                            </div>
+                            <div style="font-family:'Geist Mono',monospace;
+                            font-size:0.7rem;color:#bbb">↳ {label}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    ai_stages = {
+                        "Connecting to Gemini...":       0.2,
+                        "Analyzing vulnerabilities...":  0.5,
+                        "Analyzing audit results...":    0.5,
+                        "Generating recommendations...": 0.85,
+                    }
+
+                    def update_ai_status(msg):
+                        pct = ai_stages.get(msg, 0.4)
+                        render_ai_progress(pct, msg)
+
+                    render_ai_progress(0.05, "Building audit summary...")
+                    audit_summary = build_audit_summary(
+                        model_result=result,
+                        attack_results=st.session_state.attack_results,
+                        trojan_results=st.session_state.trojan_results
+                    )
+
+                    if source_file is not None:
+                        source_code = source_file.read().decode("utf-8")
+                        ai_response = call_gemini(
+                            audit_summary=audit_summary,
+                            source_code=source_code,
+                            tier=tier,
+                            status_callback=update_ai_status
+                        )
+                    else:
+                        ai_response = call_gemini_no_code(
+                            audit_summary=audit_summary,
+                            tier=tier,
+                            status_callback=update_ai_status
+                        )
+
+                    render_ai_progress(1.0, "Analysis complete")
+                    time.sleep(0.4)
+                    ai_container.empty()
+
+                    st.session_state.ai_response = ai_response
+                    st.session_state.ai_tier     = tier
+                    st.toast("✅ AI analysis ready!", icon="✅")
+
+                if st.session_state.get("ai_response"):
+                    tier_colors = {
+                        "student":  "#276749",
+                        "engineer": "#1a56db",
+                        "redteam":  "#c0392b"
+                    }
+                    tier_labels = {
+                        "student":  "Student Analysis",
+                        "engineer": "Engineer Analysis",
+                        "redteam":  "Red Team Analysis"
+                    }
+                    t     = st.session_state.get("ai_tier", "engineer")
+                    color = tier_colors.get(t, "#0a0a0a")
+                    label = tier_labels.get(t, "AI Analysis")
+
+                    st.markdown(f"""
+                    <div style="margin-top:1rem">
+                        <div class="step-label" style="color:{color} !important;
+                        margin-bottom:0.5rem">{label}</div>
+                        <div style="background:#fff;border:1px solid rgba(0,0,0,0.07);
+                        border-radius:10px;padding:1.5rem;font-family:'Geist',sans-serif;
+                        font-size:0.875rem;color:#444;line-height:1.7;
+                        white-space:pre-wrap">{st.session_state.ai_response}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    if t == "redteam" and source_file is not None:
+                        st.download_button(
+                            label="⬇  Download Fixed Code",
+                            data=st.session_state.ai_response,
+                            file_name="model_hardened.py",
+                            mime="text/plain"
+                        )
 
         else:
             st.markdown(
