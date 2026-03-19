@@ -1,5 +1,6 @@
 import streamlit as st
 from modules.model_loader import load_model, format_param_count
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="SentinelML",
@@ -50,9 +51,9 @@ st.markdown("""
     font-family: 'Geist Mono', monospace;
     font-size: 1rem;
     font-weight: 700;
-    color: #0a0a0a;
+    color: #0a0a0a !important;
+    text-decoration: none !important;
     letter-spacing: -0.5px;
-    text-decoration: none;
 }
 
 .navbar-links {
@@ -103,7 +104,32 @@ st.markdown("""
     transition: opacity 0.15s;
 }
 
+a.navbar-cta, a.navbar-cta:visited, a.navbar-cta:hover {
+    color: #F7F6F0 !important;
+    text-decoration: none !important;
+}
+
 .navbar-cta:hover { opacity: 0.85; }
+
+.navbar-link {
+    color: #555 !important;
+    text-decoration: none !important;
+}
+
+.navbar-github {
+    color: #444 !important;
+    text-decoration: none !important;
+}
+
+.navbar-cta {
+    color: #F7F6F0 !important;
+    text-decoration: none !important;
+}
+
+a.navbar-link, a.navbar-github, a.navbar-cta {
+    color: inherit !important;
+    text-decoration: none !important;
+}            
 
 /* ── HERO SECTION ── */
 .hero-section {
@@ -572,18 +598,18 @@ st.markdown("""
     <div class="navbar-left">
         <span class="navbar-logo">SENTINEL(ML)</span>
         <div class="navbar-links">
-            <span class="navbar-link">Documentation</span>
-            <span class="navbar-link">About</span>
+            <a class="navbar-link" href="/documentation" target="_self">Documentation</a>
+            <a class="navbar-link" href="/about" target="_self">About</a>
         </div>
     </div>
     <div class="navbar-right">
-        <span class="navbar-github">
+        <a class="navbar-github" href="https://github.com/Prateekp3108/sentinelML" target="_blank">
             <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
                 <path d="M16 2.667C8.636 2.667 2.667 8.636 2.667 16c0 5.893 3.827 10.893 9.12 12.667.667.107.88-.307.88-.667v-2.253c-3.693.8-4.48-1.587-4.48-1.587-.613-1.547-1.48-1.96-1.48-1.96-1.213-.827.093-.8.093-.8 1.333.093 2.04 1.373 2.04 1.373 1.16 2.027 3.12 1.427 3.88 1.107.12-.867.467-1.453.84-1.787-2.96-.333-6.067-1.48-6.067-6.56 0-1.48.507-2.667 1.373-3.613-.133-.333-.6-1.72.133-3.52 0 0 1.12-.36 3.667 1.36 1.053-.293 2.2-.44 3.333-.44 1.133 0 2.28.147 3.333.44 2.547-1.72 3.667-1.36 3.667-1.36.733 1.8.267 3.187.133 3.52.867.947 1.373 2.133 1.373 3.613 0 5.093-3.107 6.213-6.067 6.547.48.413.92 1.227.92 2.467v3.653c0 .36.213.787.893.667C25.52 26.88 29.333 21.893 29.333 16 29.333 8.636 23.364 2.667 16 2.667Z" fill="#444"/>
             </svg>
             GitHub
-        </span>
-        <a class="navbar-cta" href="#audit">Run Audit →</a>
+        </a>
+        <a class="navbar-cta" href="/audit" target="_self">Run Audit →</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -599,60 +625,106 @@ st.markdown("""
     <p class="hero-description">
         SentinelML automatically tests your PyTorch models against 
         adversarial attacks and neural Trojan detection — giving you 
-        a full security report in minutes.
+        a full security report.
     </p>
     <div class="hero-buttons">
-    <a class="btn-primary" href="/audit" target="_self">Start Audit →</a>
-    <a class="btn-secondary" href="#">Read the docs</a>
-</div>
+        <a class="btn-primary" href="/audit" target="_self">Start Audit →</a>
+        <a class="btn-secondary" href="/documentation" target="_self">Read the docs →</a>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Visualization separately
-st.markdown("""
-<div style="display:flex;justify-content:center;padding:0 2rem 5rem;background:#F7F6F0">
-<div class="viz-container">
-    <div class="viz-title">// live model vulnerability snapshot</div>
-    <div class="viz-row">
-        <span class="viz-label">FGSM</span>
-        <div class="viz-bar-bg">
-            <div class="viz-bar-fill" style="width:87%;background:#e53e3e;"></div>
-        </div>
-        <span class="viz-pct">87%</span>
-    </div>
-    <div class="viz-row">
-        <span class="viz-label">BIM</span>
-        <div class="viz-bar-bg">
-            <div class="viz-bar-fill" style="width:92%;background:#e53e3e;"></div>
-        </div>
-        <span class="viz-pct">92%</span>
-    </div>
-    <div class="viz-row">
-        <span class="viz-label">DeepFool</span>
-        <div class="viz-bar-bg">
-            <div class="viz-bar-fill" style="width:78%;background:#dd6b20;"></div>
-        </div>
-        <span class="viz-pct">78%</span>
-    </div>
-    <div class="viz-row">
-        <span class="viz-label">Trojan</span>
-        <div class="viz-bar-bg">
-            <div class="viz-bar-fill" style="width:34%;background:#38a169;"></div>
-        </div>
-        <span class="viz-pct">34%</span>
-    </div>
-    <div class="viz-badges">
-        <span class="viz-badge badge-red">✗ FGSM Vulnerable</span>
-        <span class="viz-badge badge-red">✗ BIM Vulnerable</span>
-        <span class="viz-badge badge-yellow">⚠ DeepFool Partial</span>
-        <span class="viz-badge badge-green">✓ Trojan Clean</span>
-    </div>
+#visualisation
+components.html("""
+<div style="display:flex;justify-content:center;padding:0 2rem 3rem;background:#F7F6F0;font-family:'Geist Mono',monospace">
+<div style="width:100%;max-width:800px;background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:2rem;box-shadow:0 4px 24px rgba(0,0,0,0.04)">
+    <div style="font-family:'Geist Mono',monospace;font-size:0.7rem;color:#aaa;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:1rem">// sentinelml audit pipeline</div>
+    <svg width="100%" viewBox="0 0 580 330">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <text x="72"  y="18" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:9px;fill:#bbb;letter-spacing:1.5px">THREATS</text>
+      <text x="290" y="18" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:9px;fill:#bbb;letter-spacing:1.5px">ENGINE</text>
+      <text x="500" y="18" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:9px;fill:#bbb;letter-spacing:1.5px">OUTPUTS</text>
+
+      <line x1="148" y1="10" x2="148" y2="310" stroke="#0a0a0a" stroke-width="0.5" stroke-dasharray="3 4" opacity="0.12"/>
+      <line x1="408" y1="10" x2="408" y2="310" stroke="#0a0a0a" stroke-width="0.5" stroke-dasharray="3 4" opacity="0.12"/>
+
+      <rect x="8"  y="32"  width="118" height="34" rx="6" fill="#fef0ef" stroke="#f5c6c2" stroke-width="0.5"/>
+      <text x="67" y="44"  text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#c0392b">FGSM attack</text>
+      <text x="67" y="57"  text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#c0392b;opacity:0.7">one-step gradient</text>
+
+      <rect x="8"  y="78"  width="118" height="34" rx="6" fill="#fef0ef" stroke="#f5c6c2" stroke-width="0.5"/>
+      <text x="67" y="90"  text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#c0392b">BIM attack</text>
+      <text x="67" y="103" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#c0392b;opacity:0.7">iterative perturbation</text>
+
+      <rect x="8"  y="124" width="118" height="34" rx="6" fill="#fef0ef" stroke="#f5c6c2" stroke-width="0.5"/>
+      <text x="67" y="136" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#c0392b">DeepFool</text>
+      <text x="67" y="149" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#c0392b;opacity:0.7">min perturbation</text>
+
+      <rect x="8"  y="170" width="118" height="34" rx="6" fill="#fffbeb" stroke="#f6e05e" stroke-width="0.5"/>
+      <text x="67" y="182" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#b7791f">Neural Trojan</text>
+      <text x="67" y="195" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#b7791f;opacity:0.7">backdoor trigger</text>
+
+      <line x1="126" y1="49"  x2="172" y2="118" stroke="#c0392b" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.4"/>
+      <line x1="126" y1="95"  x2="172" y2="128" stroke="#c0392b" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.4"/>
+      <line x1="126" y1="141" x2="172" y2="138" stroke="#c0392b" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.4"/>
+      <line x1="126" y1="187" x2="172" y2="150" stroke="#b7791f" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.4"/>
+
+      <rect x="162" y="68" width="236" height="174" rx="12" fill="#fff" stroke="#0a0a0a" stroke-width="1" opacity="0.9"/>
+      <text x="280" y="90"  text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;fill:#0a0a0a;letter-spacing:1px">SENTINEL(ML)</text>
+      <text x="280" y="104" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:8px;fill:#888">security audit engine</text>
+
+      <rect x="178" y="114" width="204" height="22" rx="4" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="0.5"/>
+      <text x="280" y="125" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#555">adversarial attack suite</text>
+
+      <rect x="178" y="142" width="204" height="22" rx="4" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="0.5"/>
+      <text x="280" y="153" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#555">neural cleanse detector</text>
+
+      <rect x="178" y="170" width="204" height="22" rx="4" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="0.5"/>
+      <text x="280" y="181" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#555">MRR defense layer</text>
+
+      <rect x="178" y="198" width="204" height="22" rx="4" fill="#f0fff4" stroke="#c6f6d5" stroke-width="0.5"/>
+      <text x="280" y="209" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#276749">llama 3.3 70b AI analysis</text>
+
+      <line x1="398" y1="130" x2="422" y2="108" stroke="#0a0a0a" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.3"/>
+      <line x1="398" y1="150" x2="422" y2="158" stroke="#0a0a0a" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.3"/>
+      <line x1="398" y1="170" x2="422" y2="208" stroke="#0a0a0a" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.3"/>
+      <line x1="398" y1="205" x2="422" y2="258" stroke="#276749" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.3"/>
+
+      <rect x="422" y="88"  width="150" height="34" rx="6" fill="#f0fff4" stroke="#c6f6d5" stroke-width="0.5"/>
+      <text x="497" y="100" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#276749">robustness score</text>
+      <text x="497" y="113" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#276749;opacity:0.7">0 - 100 rating</text>
+
+      <rect x="422" y="138" width="150" height="34" rx="6" fill="#ebf8ff" stroke="#bee3f8" stroke-width="0.5"/>
+      <text x="497" y="150" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#2b6cb0">trojan verdict</text>
+      <text x="497" y="163" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#2b6cb0;opacity:0.7">clean / detected</text>
+
+      <rect x="422" y="188" width="150" height="34" rx="6" fill="#fafafa" stroke="#e0e0e0" stroke-width="0.5"/>
+      <text x="497" y="200" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#444">PDF report</text>
+      <text x="497" y="213" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#888">audit documentation</text>
+
+      <rect x="422" y="238" width="150" height="34" rx="6" fill="#f0fff4" stroke="#c6f6d5" stroke-width="0.5"/>
+      <text x="497" y="250" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#276749">AI recommendations</text>
+      <text x="497" y="263" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#276749;opacity:0.7">tier-aware advice</text>
+
+      <rect x="178" y="268" width="108" height="34" rx="6" fill="#fafafa" stroke="#e0e0e0" stroke-width="0.5"/>
+      <text x="232" y="280" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#0a0a0a">your model</text>
+      <text x="232" y="293" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#888">.pt / .pth file</text>
+
+      <rect x="294" y="268" width="108" height="34" rx="6" fill="#f0fff4" stroke="#c6f6d5" stroke-width="0.5"/>
+      <text x="348" y="280" text-anchor="middle" style="font-family:'Geist',sans-serif;font-size:9px;font-weight:600;fill:#276749">source code</text>
+      <text x="348" y="293" text-anchor="middle" style="font-family:'Geist Mono',monospace;font-size:8px;fill:#276749;opacity:0.8">.py file (optional)</text>
+
+      <line x1="232" y1="268" x2="232" y2="244" stroke="#0a0a0a" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.25"/>
+      <line x1="348" y1="268" x2="348" y2="244" stroke="#276749" stroke-width="0.8" marker-end="url(#arrow)" opacity="0.25"/>
+    </svg>
 </div>
 </div>
-
-<div class="section-divider"></div>
-""", unsafe_allow_html=True)
-
+""", height=420, scrolling=False)
 # ── FEATURES SECTION ─────────────────────────────────────────────────────
 st.markdown("""
 <div class="features-section">
