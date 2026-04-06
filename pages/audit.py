@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+from textwrap import dedent
 from modules.auth import _encode_token, get_tier, get_user, is_logged_in, logout, persist_to_query, require_auth
 from modules.model_loader import load_model, format_param_count
 
@@ -9,6 +10,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+
+def render_html(html: str) -> None:
+    st.markdown(dedent(html), unsafe_allow_html=True)
 
 
 # ── INIT SESSION STATE EARLY ──────────────────────────────────────────────
@@ -33,7 +38,7 @@ login_href = f"/login{auth_param}" if auth_param else "/login"
 
 # ── SOFT AUTH CHECK ───────────────────────────────────────────────────────
 if not is_logged_in():
-    st.markdown(f"""
+    render_html(f"""
     <div style="max-width:500px;margin:8rem auto;text-align:center;
     padding:2rem">
         <div style="font-family:'Geist Mono',monospace;font-size:1rem;
@@ -47,10 +52,10 @@ if not is_logged_in():
         font-weight:500;padding:0.65rem 1.5rem;border-radius:7px;
         text-decoration:none">Sign in →</a>
     </div>
-    """, unsafe_allow_html=True)
+    """)
     st.stop()
 
-st.markdown("""
+render_html("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist:wght@300;400;500;600;700&display=swap');
 
@@ -438,7 +443,7 @@ div[data-testid="stFileUploadDropzone"] {
     font-weight: 500;
 }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 persist_to_query()
 
@@ -462,7 +467,7 @@ tier_labels = {"student": "Student", "engineer": "Engineer", "redteam": "Red Tea
 tier_color  = tier_colors.get(tier, "#888")
 tier_label  = tier_labels.get(tier, "")
 
-st.markdown(f"""
+render_html(f"""
 <div class="navbar">
     <div class="navbar-left">
         <a class="navbar-logo" href="/" target="_self">SENTINEL(ML)</a>
@@ -488,9 +493,9 @@ st.markdown(f"""
     border-radius:999px;border:1px solid {tier_color}40">{tier_label}</span>
 </div>
 </div>
-""", unsafe_allow_html=True)
+""")
 
-st.markdown("<div style='height:56px'></div>", unsafe_allow_html=True)
+render_html("<div style='height:56px'></div>")
 
 # ── SINGLE CENTERED COLUMN ────────────────────────────────────────────────
 _, main, _ = st.columns([2, 6, 2])
@@ -503,9 +508,8 @@ with main:
             st.switch_page("app.py")
 
     # ── PAGE HEADER ───────────────────────────────────────────────────────
-    st.markdown(f"""
+    render_html("""
     <div style="padding:2.5rem 0 0">
-                
         <div class="page-title">Security Audit</div>
         <div class="page-subtitle">
             Upload your PyTorch model to test it against adversarial
@@ -516,7 +520,7 @@ with main:
         <div class="step-title">Upload your model</div>
         <div class="step-desc">PyTorch .pt or .pth — saved with torch.save(model, path)</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     # ── FILE UPLOADER ─────────────────────────────────────────────────────
     uploaded_file = st.file_uploader(
