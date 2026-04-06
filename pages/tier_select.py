@@ -78,20 +78,24 @@ login = user.get("login", "there") if user else "there"
 _, col, _ = st.columns([2, 4, 2])
 
 with col:
+
     st.write(f"Debug: login = {login}")
-    
-    st.markdown(f"""
-    <div style="padding:5rem 0 2rem">
+
+    st.markdown("""
+    <div style="padding:5rem 0 1rem">
         <div style="font-family:'Geist Mono',monospace;font-size:0.65rem;
         color:#bbb;letter-spacing:2.5px;text-transform:uppercase;
         margin-bottom:0.75rem">One-time setup</div>
+    </div>
+    """, unsafe_allow_html=True)
 
+    st.markdown(f"""
+    <div style="padding:0 0 2rem">
         <div style="font-family:'Geist',sans-serif;font-size:1.8rem;
         font-weight:700;color:#0a0a0a;letter-spacing:-1px;
         line-height:1.15;margin-bottom:0.5rem">
             Hey {login}, how do you identify?
         </div>
-
         <div style="font-family:'Geist',sans-serif;font-size:0.9rem;
         color:#888;line-height:1.6;margin-bottom:2.5rem">
             This sets the depth of your AI security analysis.
