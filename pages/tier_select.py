@@ -1,5 +1,6 @@
 import streamlit as st
 from modules.auth import is_logged_in, get_user, has_selected_tier
+from modules.auth import is_logged_in, get_user, has_selected_tier, persist_to_query
 
 st.set_page_config(
     page_title="SentinelML — Choose your tier",
@@ -192,6 +193,7 @@ with col:
     if st.session_state.selected_tier_temp:
         if st.button("Continue →", key="confirm_tier", use_container_width=True):
             st.session_state.user_tier = st.session_state.selected_tier_temp
+            persist_to_query() 
             st.session_state.pop("selected_tier_temp", None)
             st.switch_page("app.py")
     else:

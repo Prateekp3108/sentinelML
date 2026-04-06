@@ -2,6 +2,8 @@ import streamlit as st
 import streamlit.components.v1 as components
 from modules.model_loader import load_model, format_param_count
 from modules.auth import is_logged_in, has_selected_tier, get_user, get_tier, logout
+from modules.auth import require_auth, get_user, get_tier, logout, persist_to_query
+from modules.auth import persist_to_query, _encode_token
 
 st.set_page_config(
     page_title="SentinelML",
@@ -10,17 +12,26 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+auth_param = ""
+user = st.session_state.get("user")
+tier = st.session_state.get("user_tier")
+if user:
+    token = _encode_token({"user": user, "tier": tier})
+    auth_param = f"?auth={token}"
+
 # ── INIT SESSION STATE EARLY ──────────────────────────────────────────────
 if "user" not in st.session_state:
     st.session_state.user = None
 if "user_tier" not in st.session_state:
     st.session_state.user_tier = None
 
+require_auth()
+persist_to_query()
+
 # ── AUTH GUARD ────────────────────────────────────────────────────────────
 if not is_logged_in():
     st.switch_page("pages/login.py")
-if not has_selected_tier():
-    st.switch_page("pages/tier_select.py")
+    st.stop()
 
 # ── SESSION STATE ─────────────────────────────────────────────────────────
 if "model_result" not in st.session_state:
@@ -312,7 +323,7 @@ st.markdown(f"""
         <span style="font-family:'Geist Mono',monospace;font-size:0.65rem;
         color:{tier_color};background:rgba(0,0,0,0.04);padding:0.2rem 0.6rem;
         border-radius:999px;border:1px solid {tier_color}30">{tier_label}</span>
-        <a class="navbar-cta" href="/audit" target="_self">Run Audit →</a>
+        <a class="navbar-cta" href="/audit{auth_param}" target="_self">Run Audit →</a>
     </div>
 </div>
 """, unsafe_allow_html=True)

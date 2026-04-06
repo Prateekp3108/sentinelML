@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 from modules.model_loader import load_model, format_param_count
-from modules.auth import require_auth, get_user, get_tier, logout, navbar_auth_block
+from modules.auth import require_auth, get_user, get_tier, logout, persist_to_query
 
 st.set_page_config(
     page_title="SentinelML — Audit",
@@ -18,6 +18,26 @@ if "user_tier" not in st.session_state:
     st.session_state.user_tier = None
 
 require_auth()
+persist_to_query()
+
+# ── SOFT AUTH CHECK ───────────────────────────────────────────────────────
+if not is_logged_in():
+    st.markdown("""
+    <div style="max-width:500px;margin:8rem auto;text-align:center;
+    padding:2rem">
+        <div style="font-family:'Geist Mono',monospace;font-size:1rem;
+        font-weight:700;color:#0a0a0a;margin-bottom:1rem">SENTINEL(ML)</div>
+        <div style="font-family:'Geist',sans-serif;font-size:0.9rem;
+        color:#888;margin-bottom:2rem">
+            Your session expired. Please sign in again.
+        </div>
+        <a href="/login" target="_self" style="background:#0a0a0a;
+        color:#F7F6F0;font-family:'Geist',sans-serif;font-size:0.875rem;
+        font-weight:500;padding:0.65rem 1.5rem;border-radius:7px;
+        text-decoration:none">Sign in →</a>
+    </div>
+    """, unsafe_allow_html=True)
+    st.stop()
 
 st.markdown("""
 <style>
