@@ -8,6 +8,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+from modules.auth import require_auth, get_user, get_tier, logout, navbar_auth_block
+
+require_auth()
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Geist:wght@300;400;500;600;700&display=swap');
@@ -52,6 +56,18 @@ div[data-testid="stHorizontalBlock"] { gap: 0.75rem !important; }
     align-items: center;
     justify-content: space-between;
     padding: 0 1.5rem;
+}
+
+.navbar-left { 
+    display: flex; 
+    align-items: center; 
+    gap: 2.5rem; 
+}
+
+.navbar-right { 
+    display: flex; 
+    align-items: center; 
+    gap: 1rem; 
 }
 
 .navbar-logo {
@@ -399,16 +415,39 @@ if "ai_tier" not in st.session_state:
     st.session_state.ai_tier = None
 
 # ── NAVBAR ────────────────────────────────────────────────────────────────
-st.markdown("""
+user = get_user()
+tier = get_tier()
+tier_colors = {"student": "#276749", "engineer": "#1a56db", "redteam": "#c0392b"}
+tier_labels = {"student": "Student", "engineer": "Engineer", "redteam": "Red Team"}
+tier_color  = tier_colors.get(tier, "#888")
+tier_label  = tier_labels.get(tier, "")
+
+st.markdown(f"""
 <div class="navbar">
-    <div style="display:flex;align-items:center;gap:2.5rem">
+    <div class="navbar-left">
         <a class="navbar-logo" href="/" target="_self">SENTINEL(ML)</a>
         <div class="navbar-links">
-            <span class="navbar-link">Documentation</span>
-            <span class="navbar-link">About</span>
+            <a class="navbar-link" href="/documentation" target="_self">Documentation</a>
+            <a class="navbar-link" href="/about" target="_self">About</a>
         </div>
     </div>
+    <div class="navbar-right" style="display:flex;align-items:center;gap:1rem">
+    <a class="navbar-github" href="https://github.com/Prateekp3108/sentinelML" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 32 32" fill="none">
+            <path d="M16 2.667C8.636 2.667 2.667 8.636 2.667 16c0 5.893 3.827 10.893 9.12 12.667.667.107.88-.307.88-.667v-2.253c-3.693.8-4.48-1.587-4.48-1.587-.613-1.547-1.48-1.96-1.48-1.96-1.213-.827.093-.8.093-.8 1.333.093 2.04 1.373 2.04 1.373 1.16 2.027 3.12 1.427 3.88 1.107.12-.867.467-1.453.84-1.787-2.96-.333-6.067-1.48-6.067-6.56 0-1.48.507-2.667 1.373-3.613-.133-.333-.6-1.72.133-3.52 0 0 1.12-.36 3.667 1.36 1.053-.293 2.2-.44 3.333-.44 1.133 0 2.28.147 3.333.44 2.547-1.72 3.667-1.36 3.667-1.36.733 1.8.267 3.187.133 3.52.867.947 1.373 2.133 1.373 3.613 0 5.093-3.107 6.213-6.067 6.547.48.413.92 1.227.92 2.467v3.653c0 .36.213.787.893.667C25.52 26.88 29.333 21.893 29.333 16 29.333 8.636 23.364 2.667 16 2.667Z" fill="#444"/>
+        </svg>
+        GitHub
+    </a>
+
+    <img src="{user.get('avatar_url', '') if user else ''}" width="26" height="26"
+         style="border-radius:50%;border:1px solid rgba(0,0,0,0.1)"/>
+    <span style="font-family:'Geist',sans-serif;font-size:0.825rem;color:#444">
+        {user.get('login', '') if user else ''}</span>
+    <span style="font-family:'Geist Mono',monospace;font-size:0.65rem;
+    color:{tier_color};background:rgba(0,0,0,0.04);padding:0.2rem 0.6rem;
+    border-radius:999px;border:1px solid {tier_color}30">{tier_label}</span>
     <a class="navbar-back" href="/" target="_self">← Home</a>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -423,6 +462,7 @@ with main:
     st.markdown("""
     <div style="padding:2.5rem 0 0">
         <a class="back-link" href="/" target="_self">← Home</a>
+                
         <div class="page-title">Security Audit</div>
         <div class="page-subtitle">
             Upload your PyTorch model to test it against adversarial
@@ -842,16 +882,19 @@ with main:
                 personalised recommendations</div>
                 """, unsafe_allow_html=True)
 
-                tier = st.selectbox(
-                    "Your experience level",
-                    options=["student", "engineer", "redteam"],
-                    format_func=lambda x: {
-                        "student":  "🟢 Student / Researcher — plain English explanations",
-                        "engineer": "🔵 ML Engineer — technical fixes and code snippets",
-                        "redteam":  "🔴 Red Team Analyst — full rewritten code + threat model"
-                    }[x],
-                    label_visibility="collapsed"
-                )
+                tier = get_tier()  # already set from login — no need to ask again
+
+                tier_labels = {
+                    "student":  "🟢 Student / Researcher",
+                    "engineer": "🔵 ML Engineer",
+                    "redteam":  "🔴 Red Team Analyst"
+                }
+                st.markdown(f"""
+                <div style="font-family:'Geist Mono',monospace;font-size:0.7rem;
+                color:#aaa;padding:0.4rem 0">
+                ↳ Analysis tier: {tier_labels.get(tier, tier)}
+                </div>
+                """, unsafe_allow_html=True)
 
                 source_file = st.file_uploader(
                     "Upload model source code (.py) — optional",
@@ -969,5 +1012,10 @@ with main:
                 f'<div class="error-box">✗ {result["error"]}</div>',
                 unsafe_allow_html=True)
 
+    st.markdown("<div style='margin-top:2rem'></div>", unsafe_allow_html=True)
+
+    if st.button("Sign out", key="logout_audit"):
+        logout()
+        st.switch_page("pages/login.py")
     # bottom breathing room
     st.markdown("<div style='height:5rem'></div>", unsafe_allow_html=True)
