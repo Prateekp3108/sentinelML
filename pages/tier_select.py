@@ -78,6 +78,8 @@ login = user.get("login", "there") if user else "there"
 _, col, _ = st.columns([2, 4, 2])
 
 with col:
+    st.write(f"Debug: login = {login}")
+    
     st.markdown(f"""
     <div style="padding:5rem 0 2rem">
         <div style="font-family:'Geist Mono',monospace;font-size:0.65rem;
