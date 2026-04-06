@@ -1,6 +1,5 @@
 import streamlit as st
-from modules.auth import is_logged_in, get_user, has_selected_tier
-from modules.auth import is_logged_in, get_user, has_selected_tier, persist_to_query
+from modules.auth import get_user, has_selected_tier, is_logged_in, persist_to_query
 
 st.set_page_config(
     page_title="SentinelML — Choose your tier",
@@ -85,8 +84,6 @@ login = user.get("login", "there") if user else "there"
 _, col, _ = st.columns([2, 4, 2])
 
 with col:
-
-    st.write(f"Debug: login = {login}")
 
     st.markdown("""
     <div style="padding:5rem 0 1rem">

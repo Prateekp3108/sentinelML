@@ -1,7 +1,7 @@
 import streamlit as st
 import time
+from modules.auth import _encode_token, get_tier, get_user, is_logged_in, logout, persist_to_query, require_auth
 from modules.model_loader import load_model, format_param_count
-from modules.auth import require_auth, get_user, get_tier, logout, persist_to_query
 
 st.set_page_config(
     page_title="SentinelML — Audit",
@@ -20,9 +20,21 @@ if "user_tier" not in st.session_state:
 require_auth()
 persist_to_query()
 
+auth_param = ""
+user = st.session_state.get("user")
+tier = st.session_state.get("user_tier")
+if user:
+    token = _encode_token({"user": user, "tier": tier})
+    auth_param = f"?auth={token}"
+
+home_href = f"/{auth_param}" if auth_param else "/"
+documentation_href = f"/documentation{auth_param}" if auth_param else "/documentation"
+about_href = f"/about{auth_param}" if auth_param else "/about"
+login_href = f"/login{auth_param}" if auth_param else "/login"
+
 # ── SOFT AUTH CHECK ───────────────────────────────────────────────────────
 if not is_logged_in():
-    st.markdown("""
+    st.markdown(f"""
     <div style="max-width:500px;margin:8rem auto;text-align:center;
     padding:2rem">
         <div style="font-family:'Geist Mono',monospace;font-size:1rem;
@@ -31,7 +43,7 @@ if not is_logged_in():
         color:#888;margin-bottom:2rem">
             Your session expired. Please sign in again.
         </div>
-        <a href="/login" target="_self" style="background:#0a0a0a;
+        <a href="{login_href}" target="_self" style="background:#0a0a0a;
         color:#F7F6F0;font-family:'Geist',sans-serif;font-size:0.875rem;
         font-weight:500;padding:0.65rem 1.5rem;border-radius:7px;
         text-decoration:none">Sign in →</a>
@@ -452,10 +464,10 @@ tier_label  = tier_labels.get(tier, "")
 st.markdown(f"""
 <div class="navbar">
     <div class="navbar-left">
-        <a class="navbar-logo" href="/" target="_self">SENTINEL(ML)</a>
+        <a class="navbar-logo" href="{home_href}" target="_self">SENTINEL(ML)</a>
         <div class="navbar-links">
-            <a class="navbar-link" href="/documentation" target="_self">Documentation</a>
-            <a class="navbar-link" href="/about" target="_self">About</a>
+            <a class="navbar-link" href="{documentation_href}" target="_self">Documentation</a>
+            <a class="navbar-link" href="{about_href}" target="_self">About</a>
         </div>
     </div>
     <div class="navbar-right" style="display:flex;align-items:center;gap:1rem">
@@ -473,7 +485,7 @@ st.markdown(f"""
     <span style="font-family:'Geist Mono',monospace;font-size:0.65rem;
     color:{tier_color};background:rgba(0,0,0,0.04);padding:0.2rem 0.6rem;
     border-radius:999px;border:1px solid {tier_color}30">{tier_label}</span>
-    <a class="navbar-back" href="/" target="_self">← Home</a>
+    <a class="navbar-back" href="{home_href}" target="_self">← Home</a>
 </div>
 </div>
 """, unsafe_allow_html=True)
@@ -486,9 +498,9 @@ _, main, _ = st.columns([2, 6, 2])
 with main:
 
     # ── PAGE HEADER ───────────────────────────────────────────────────────
-    st.markdown("""
+    st.markdown(f"""
     <div style="padding:2.5rem 0 0">
-        <a class="back-link" href="/" target="_self">← Home</a>
+        <a class="back-link" href="{home_href}" target="_self">← Home</a>
                 
         <div class="page-title">Security Audit</div>
         <div class="page-subtitle">

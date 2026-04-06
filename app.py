@@ -1,9 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
+from modules.auth import _encode_token, get_tier, get_user, is_logged_in, logout, persist_to_query, require_auth
 from modules.model_loader import load_model, format_param_count
-from modules.auth import is_logged_in, has_selected_tier, get_user, get_tier, logout
-from modules.auth import require_auth, get_user, get_tier, logout, persist_to_query
-from modules.auth import persist_to_query, _encode_token
 
 st.set_page_config(
     page_title="SentinelML",
@@ -18,6 +16,11 @@ tier = st.session_state.get("user_tier")
 if user:
     token = _encode_token({"user": user, "tier": tier})
     auth_param = f"?auth={token}"
+
+home_href = f"/{auth_param}" if auth_param else "/"
+documentation_href = f"/documentation{auth_param}" if auth_param else "/documentation"
+about_href = f"/about{auth_param}" if auth_param else "/about"
+audit_href = f"/audit{auth_param}" if auth_param else "/audit"
 
 # ── INIT SESSION STATE EARLY ──────────────────────────────────────────────
 if "user" not in st.session_state:
@@ -303,10 +306,10 @@ login_name  = user.get("login", "") if user else ""
 st.markdown(f"""
 <div class="navbar">
     <div class="navbar-left">
-        <a class="navbar-logo" href="/" target="_self">SENTINEL(ML)</a>
+        <a class="navbar-logo" href="{home_href}" target="_self">SENTINEL(ML)</a>
         <div class="navbar-links">
-            <a class="navbar-link" href="/documentation" target="_self">Documentation</a>
-            <a class="navbar-link" href="/about" target="_self">About</a>
+            <a class="navbar-link" href="{documentation_href}" target="_self">Documentation</a>
+            <a class="navbar-link" href="{about_href}" target="_self">About</a>
         </div>
     </div>
     <div class="navbar-right">
@@ -323,13 +326,13 @@ st.markdown(f"""
         <span style="font-family:'Geist Mono',monospace;font-size:0.65rem;
         color:{tier_color};background:rgba(0,0,0,0.04);padding:0.2rem 0.6rem;
         border-radius:999px;border:1px solid {tier_color}30">{tier_label}</span>
-        <a class="navbar-cta" href="/audit{auth_param}" target="_self">Run Audit →</a>
+        <a class="navbar-cta" href="{audit_href}" target="_self">Run Audit →</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ── HERO ──────────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <div class="hero-section">
     <div class="hero-eyebrow">ML Security Auditor</div>
     <h1 class="hero-title">
@@ -341,8 +344,8 @@ st.markdown("""
         a full security report.
     </p>
     <div class="hero-buttons">
-        <a class="btn-primary" href="/audit" target="_self">Start Audit →</a>
-        <a class="btn-secondary" href="/documentation" target="_self">Read the docs →</a>
+        <a class="btn-primary" href="{audit_href}" target="_self">Start Audit →</a>
+        <a class="btn-secondary" href="{documentation_href}" target="_self">Read the docs →</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
