@@ -5,7 +5,6 @@ import json
 import base64
 
 def _encode_token(data: dict) -> str:
-    """Simple base64 encoding of user data for URL storage."""
     return base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
 
 def _decode_token(token: str) -> dict:
@@ -15,10 +14,8 @@ def _decode_token(token: str) -> dict:
         return {}
 
 def is_logged_in() -> bool:
-    # Check session state first
     if "user" in st.session_state and st.session_state["user"]:
         return True
-    # Fall back to query param
     _restore_from_query()
     return "user" in st.session_state and bool(st.session_state["user"])
 
