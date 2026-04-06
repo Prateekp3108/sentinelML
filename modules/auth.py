@@ -4,8 +4,21 @@ import hashlib
 import json
 import base64
 
+def _compact_user(user: dict) -> dict:
+    if not isinstance(user, dict):
+        return {}
+    return {
+        "login": user.get("login", ""),
+        "id": user.get("id"),
+        "avatar_url": user.get("avatar_url", ""),
+        "html_url": user.get("html_url", ""),
+    }
+
 def _encode_token(data: dict) -> str:
-    return base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+    payload = dict(data)
+    if "user" in payload:
+        payload["user"] = _compact_user(payload["user"])
+    return base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
 
 def _decode_token(token: str) -> dict:
     try:
