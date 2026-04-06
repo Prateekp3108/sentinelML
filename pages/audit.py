@@ -18,7 +18,7 @@ if "user_tier" not in st.session_state:
     st.session_state.user_tier = None
 
 require_auth()
-persist_to_query()
+
 
 auth_param = ""
 user = st.session_state.get("user")
@@ -440,6 +440,8 @@ div[data-testid="stFileUploadDropzone"] {
 </style>
 """, unsafe_allow_html=True)
 
+persist_to_query()
+
 # ── SESSION STATE ─────────────────────────────────────────────────────────
 if "model_result" not in st.session_state:
     st.session_state.model_result = None
@@ -483,7 +485,7 @@ st.markdown(f"""
         {user.get('login', '') if user else ''}</span>
     <span style="font-family:'Geist Mono',monospace;font-size:0.65rem;
     color:{tier_color};background:rgba(0,0,0,0.04);padding:0.2rem 0.6rem;
-    border-radius:999px;border:1px solid {tier_color}30">{tier_label}</span>
+    border-radius:999px;border:1px solid {tier_color}40">{tier_label}</span>
 </div>
 </div>
 """, unsafe_allow_html=True)
