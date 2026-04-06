@@ -8,6 +8,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# ── INIT SESSION STATE EARLY ──────────────────────────────────────────────
+if "user" not in st.session_state:
+    st.session_state.user = None
+if "user_tier" not in st.session_state:
+    st.session_state.user_tier = None
+
 # ── Guard ─────────────────────────────────────────────────────────────────
 if not is_logged_in():
     st.switch_page("pages/login.py")

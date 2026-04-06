@@ -3,7 +3,7 @@ import requests
 
 
 def is_logged_in():
-    return st.session_state.get("user") is not None
+    return "user" in st.session_state and st.session_state["user"] is not None
 
 
 def get_user():

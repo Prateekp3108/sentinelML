@@ -1,6 +1,8 @@
 import streamlit as st
 import time
 from modules.model_loader import load_model, format_param_count
+from modules.auth import require_auth, get_user, get_tier, logout, navbar_auth_block
+
 st.set_page_config(
     page_title="SentinelML — Audit",
     page_icon="🛡️",
@@ -8,7 +10,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-from modules.auth import require_auth, get_user, get_tier, logout, navbar_auth_block
+
+# ── INIT SESSION STATE EARLY ──────────────────────────────────────────────
+if "user" not in st.session_state:
+    st.session_state.user = None
+if "user_tier" not in st.session_state:
+    st.session_state.user_tier = None
 
 require_auth()
 
