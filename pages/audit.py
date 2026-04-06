@@ -113,6 +113,26 @@ div[data-testid="stHorizontalBlock"] { gap: 0.75rem !important; }
     gap: 1rem; 
 }
 
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.navbar-user-name {
+    font-family: 'Geist', sans-serif;
+    font-size: 0.825rem;
+    color: #444 !important;
+}
+
+.navbar-tier {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.04);
+}
+
 .navbar-logo {
     font-family: 'Geist Mono', monospace;
     font-size: 1rem;
@@ -483,14 +503,12 @@ render_html(f"""
         </svg>
         GitHub
     </a>
-
-    <img src="{user.get('avatar_url', '') if user else ''}" width="26" height="26"
-         style="border-radius:50%;border:1px solid rgba(0,0,0,0.1)"/>
-    <span style="font-family:'Geist',sans-serif;font-size:0.825rem;color:#444">
-        {user.get('login', '') if user else ''}</span>
-    <span style="font-family:'Geist Mono',monospace;font-size:0.65rem;
-    color:{tier_color};background:rgba(0,0,0,0.04);padding:0.2rem 0.6rem;
-    border-radius:999px;border:1px solid {tier_color}40">{tier_label}</span>
+    <div class="navbar-user">
+        <div class="navbar-user-name">{user.get('login', '') if user else ''}</div>
+        <div class="navbar-tier" style="color:{tier_color};border:1px solid {tier_color}40">
+            {tier_label}
+        </div>
+    </div>
 </div>
 </div>
 """)
