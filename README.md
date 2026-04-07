@@ -11,6 +11,7 @@ This project implements two core ADAS functionalities:
 The system processes dashcam video footage and provides real-time visual alerts when collision risk is detected.
 
 ## Project Structure
+```
 mini-ADAS/
 │
 ├── modules/
@@ -41,8 +42,9 @@ mini-ADAS/
 ├── config.py                    # Centralized configuration
 ├── requirements.txt             # Python dependencies
 └── README.md
+```
 ## System Architecture
-
+```
 The pipeline processes each video frame sequentially through the following modules:
 Input Frame
 |
@@ -55,6 +57,7 @@ Input Frame
 ├── TTC Calculator           → Time-to-collision and risk level
 |
 └── Display Module           → Annotated output frame
+```
 
 ## Technologies Used
 
@@ -163,9 +166,9 @@ Draws color-coded bounding boxes (green/yellow/red based on risk), distance and 
 
 ## Author
 
-Prateek Pandey
-23FE10CAI00424
-Suhani Sharma 
-23FE10CAI00220
+1. Prateek Pandey
+   23FE10CAI00424
+2. Suhani Sharma 
+   23FE10CAI00220
 B.Tech Computer Science and Engineering (AIML)
 Manipal University Jaipur
