@@ -13,7 +13,7 @@ SentinelML automatically tests your trained PyTorch models against three classes
 
 ## Live Demo
 
-[sentinelml.streamlit.app](https://sentinelml.streamlit.app)
+[sentinel-ml.streamlit.app/](https://sentinel-ml.streamlit.app/)
 
 ## Tech Stack
 
