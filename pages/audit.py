@@ -663,9 +663,9 @@ with main:
 
             b1, b2 = st.columns(2)
             with b1:
-                run_adv  = st.button("⚔️  Adversarial Test")
+                run_adv  = st.button(" Adversarial Test")
             with b2:
-                run_troj = st.button("🔍  Trojan Detection")
+                run_troj = st.button(" Trojan Detection")
 
             # ── ADVERSARIAL ───────────────────────────────────────────────
             if run_adv:
@@ -968,7 +968,7 @@ with main:
                     key="source_uploader"
                 )
 
-                if st.button("✨  Generate AI Analysis"):
+                if st.button(" Generate AI Analysis"):
                     from modules.ai_advisor import (
                         build_audit_summary, call_gemini, call_gemini_no_code
                     )
@@ -1066,7 +1066,7 @@ with main:
 
                     if t == "redteam" and source_file is not None:
                         st.download_button(
-                            label="⬇  Download Fixed Code",
+                            label="⬇  Download AI Analysis ",
                             data=st.session_state.ai_response,
                             file_name="model_hardened.py",
                             mime="text/plain"
